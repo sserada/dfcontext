@@ -68,3 +68,43 @@ class TestDatetimeAnalyzer:
         summary = analyzer.analyze(s, budget=200)
 
         assert "granularity" not in summary.stats
+
+    def test_second_granularity(self) -> None:
+        s = pd.Series(
+            pd.date_range("2024-01-01", periods=100, freq="s"),
+            name="sec",
+        )
+        analyzer = DatetimeAnalyzer()
+        summary = analyzer.analyze(s, budget=200)
+
+        assert summary.stats["granularity"] == "second"
+
+    def test_minute_granularity(self) -> None:
+        s = pd.Series(
+            pd.date_range("2024-01-01", periods=100, freq="min"),
+            name="min",
+        )
+        analyzer = DatetimeAnalyzer()
+        summary = analyzer.analyze(s, budget=200)
+
+        assert summary.stats["granularity"] == "minute"
+
+    def test_weekly_granularity(self) -> None:
+        s = pd.Series(
+            pd.date_range("2024-01-01", periods=20, freq="W"),
+            name="week",
+        )
+        analyzer = DatetimeAnalyzer()
+        summary = analyzer.analyze(s, budget=200)
+
+        assert summary.stats["granularity"] == "weekly"
+
+    def test_yearly_granularity(self) -> None:
+        s = pd.Series(
+            pd.date_range("2020-01-01", periods=5, freq="YS"),
+            name="year",
+        )
+        analyzer = DatetimeAnalyzer()
+        summary = analyzer.analyze(s, budget=200)
+
+        assert summary.stats["granularity"] == "yearly"

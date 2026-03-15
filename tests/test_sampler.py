@@ -84,3 +84,24 @@ class TestRepresentativeSampler:
         result = sampler.sample(df, max_rows=5)
 
         assert len(result) == 5
+
+    def test_evenly_spaced_fallback(self) -> None:
+        """DataFrame with only datetime columns uses evenly spaced."""
+        df = pd.DataFrame({
+            "ts": pd.date_range("2024-01-01", periods=100),
+        })
+        sampler = RepresentativeSampler()
+        result = sampler.sample(df, max_rows=5)
+
+        assert len(result) == 5
+
+    def test_categorical_dtype_column(self) -> None:
+        df = pd.DataFrame({
+            "cat": pd.Categorical(["a", "b", "c"] * 20),
+            "val": range(60),
+        })
+        sampler = RepresentativeSampler()
+        result = sampler.sample(df, max_rows=6)
+
+        assert len(result) <= 6
+        assert result["cat"].nunique() >= 2
