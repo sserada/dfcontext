@@ -4,11 +4,38 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from dfcontext.analyzers.base import ColumnSummary, classify_column
+from dfcontext.analyzers.boolean import BooleanAnalyzer
+from dfcontext.analyzers.categorical import CategoricalAnalyzer
+from dfcontext.analyzers.datetime import DatetimeAnalyzer
+from dfcontext.analyzers.numeric import NumericAnalyzer
+from dfcontext.analyzers.text import TextAnalyzer
+from dfcontext.budget import TokenBudgetAllocator
 from dfcontext.config import ContextConfig
+from dfcontext.formatters.markdown import MarkdownFormatter
+from dfcontext.formatters.plain import PlainTextFormatter
+from dfcontext.formatters.yaml_fmt import YAMLFormatter
+from dfcontext.sampler import RepresentativeSampler
+from dfcontext.tokenizer import TokenCounter
 
 if TYPE_CHECKING:
     import pandas as pd
-from dfcontext.tokenizer import TokenCounter
+
+    from dfcontext.formatters.base import BaseFormatter
+
+_ANALYZERS = {
+    "numeric": NumericAnalyzer(),
+    "categorical": CategoricalAnalyzer(),
+    "text": TextAnalyzer(),
+    "datetime": DatetimeAnalyzer(),
+    "boolean": BooleanAnalyzer(),
+}
+
+_FORMATTERS: dict[str, BaseFormatter] = {
+    "markdown": MarkdownFormatter(),
+    "plain": PlainTextFormatter(),
+    "yaml": YAMLFormatter(),
+}
 
 
 def to_context(
@@ -78,35 +105,114 @@ def to_context(
         df = df[columns]
 
     tc = TokenCounter(cfg.tokenizer)
+    formatter = _FORMATTERS[cfg.format]
+
+    # Budget allocation
+    allocator = TokenBudgetAllocator(cfg.budget_ratio)
+    plan = allocator.allocate(
+        df,
+        cfg.token_budget,
+        hint=cfg.hint,
+        include_schema=cfg.include_schema,
+        include_stats=cfg.include_stats,
+        include_samples=cfg.include_samples,
+    )
+
     parts: list[str] = []
 
     # Schema section
     if cfg.include_schema:
-        parts.append(_build_schema(df))
+        schema_text = formatter.format_schema(df)
+        if not tc.fits(schema_text, plan.schema_budget):
+            schema_text = tc.truncate(
+                schema_text, plan.schema_budget
+            )
+        parts.append(schema_text)
+
+    # Stats section
+    if cfg.include_stats:
+        summaries = _analyze_all_columns(df, plan.column_budgets)
+        stats_text = formatter.format_stats(summaries)
+        if stats_text:
+            parts.append(stats_text)
+
+    # Samples section
+    if cfg.include_samples and cfg.max_sample_rows > 0:
+        sampler = RepresentativeSampler()
+        sample_df = sampler.sample(df, cfg.max_sample_rows)
+        samples_text = formatter.format_samples(
+            sample_df, cfg.max_sample_rows
+        )
+        if samples_text:
+            parts.append(samples_text)
 
     result = "\n\n".join(parts)
 
-    # Ensure output fits within budget
+    # Final budget enforcement
     if not tc.fits(result, cfg.token_budget):
         result = tc.truncate(result, cfg.token_budget)
 
     return result
 
 
-def _build_schema(df: pd.DataFrame) -> str:
-    """Build the schema section describing shape, columns, and dtypes."""
-    rows, cols = df.shape
-    lines = [
-        "## Dataset overview",
-        f"- {rows:,} rows × {cols} columns",
-        "",
-        "## Schema",
-        "| Column | Type | Non-null |",
-        "|--------|------|----------|",
-    ]
-    for col in df.columns:
-        dtype = str(df[col].dtype)
-        non_null_pct = df[col].notna().mean() * 100
-        lines.append(f"| {col} | {dtype} | {non_null_pct:.0f}% |")
+def analyze_columns(
+    df: pd.DataFrame,
+    columns: list[str] | None = None,
+) -> dict[str, ColumnSummary]:
+    """Analyze columns and return structured summaries.
 
-    return "\n".join(lines)
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame to analyze.
+    columns : list[str] or None
+        Columns to analyze. ``None`` means all.
+
+    Returns
+    -------
+    dict[str, ColumnSummary]
+        Column name to summary mapping.
+    """
+    cols = columns or list(df.columns)
+    result: dict[str, ColumnSummary] = {}
+    for col in cols:
+        col_type = classify_column(df[col])
+        analyzer = _ANALYZERS.get(col_type, _ANALYZERS["text"])
+        result[col] = analyzer.analyze(df[col], budget=200)
+    return result
+
+
+def count_tokens(
+    text: str, tokenizer: str = "cl100k_base"
+) -> int:
+    """Count the number of tokens in text.
+
+    Parameters
+    ----------
+    text : str
+        The text to count tokens for.
+    tokenizer : str
+        tiktoken encoding name.
+
+    Returns
+    -------
+    int
+        Token count.
+    """
+    tc = TokenCounter(tokenizer)
+    return tc.count(text)
+
+
+def _analyze_all_columns(
+    df: pd.DataFrame,
+    column_budgets: dict[str, int],
+) -> list[ColumnSummary]:
+    """Analyze all columns with allocated budgets."""
+    summaries: list[ColumnSummary] = []
+    for col in df.columns:
+        col_str = str(col)
+        budget = column_budgets.get(col_str, 50)
+        col_type = classify_column(df[col])
+        analyzer = _ANALYZERS.get(col_type, _ANALYZERS["text"])
+        summaries.append(analyzer.analyze(df[col], budget))
+    return summaries
