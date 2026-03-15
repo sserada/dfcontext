@@ -179,6 +179,16 @@ response = client.messages.create(
 | `ColumnSummary` | Structured result from column analysis |
 | `BudgetPlan` | Token budget allocation plan |
 
+## Examples
+
+See the [`examples/`](examples/) directory for runnable scripts:
+
+- **[with_claude.py](examples/with_claude.py)** — Analyze a DataFrame with Anthropic Claude
+- **[with_openai.py](examples/with_openai.py)** — Analyze a DataFrame with OpenAI GPT
+- **[compare_dataframes.py](examples/compare_dataframes.py)** — Year-over-year comparison
+- **[budget_tuning.py](examples/budget_tuning.py)** — See how budget affects output (no API key needed)
+- **[mcp_server.py](examples/mcp_server.py)** — Build an MCP tool that summarizes CSV files
+
 ## License
 
 MIT
