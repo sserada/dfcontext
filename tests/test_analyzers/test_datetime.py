@@ -58,3 +58,13 @@ class TestDatetimeAnalyzer:
 
         assert "2024-06-15" in summary.stats["min"]
         assert "granularity" not in summary.stats
+
+    def test_identical_values(self) -> None:
+        s = pd.Series(
+            pd.to_datetime(["2024-01-01"] * 5),
+            name="constant",
+        )
+        analyzer = DatetimeAnalyzer()
+        summary = analyzer.analyze(s, budget=200)
+
+        assert "granularity" not in summary.stats

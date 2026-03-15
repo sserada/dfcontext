@@ -64,3 +64,23 @@ class TestRepresentativeSampler:
         result = sampler.sample(df, max_rows=0)
 
         assert len(result) == 0
+
+    def test_string_index(self) -> None:
+        df = pd.DataFrame(
+            {"x": range(100)},
+            index=[f"idx_{i}" for i in range(100)],
+        )
+        sampler = RepresentativeSampler()
+        result = sampler.sample(df, max_rows=5)
+
+        assert len(result) == 5
+
+    def test_datetime_index(self) -> None:
+        df = pd.DataFrame(
+            {"x": range(100)},
+            index=pd.date_range("2024-01-01", periods=100),
+        )
+        sampler = RepresentativeSampler()
+        result = sampler.sample(df, max_rows=5)
+
+        assert len(result) == 5

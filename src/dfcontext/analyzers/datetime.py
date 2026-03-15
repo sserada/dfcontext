@@ -74,6 +74,8 @@ def _estimate_granularity(series: pd.Series) -> str | None:
     median_diff = pd_mod.Timedelta(diffs.median())
     seconds = median_diff.total_seconds()
 
+    if seconds == 0:
+        return None
     if seconds < 1:
         return "sub-second"
     if seconds < 60:

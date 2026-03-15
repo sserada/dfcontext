@@ -106,28 +106,29 @@ def _numeric_diverse_sample(
     seed: int,
 ) -> pd.DataFrame:
     """Sample rows near min, max, median, plus random."""
-    sorted_df = df.sort_values(col)
-    indices: set[int] = set()
+    sorted_df = df.sort_values(col).reset_index(drop=True)
+    pos_indices: set[int] = set()
 
-    # Min, max, median
-    indices.add(int(sorted_df.index[0]))
-    indices.add(int(sorted_df.index[-1]))
-    mid = len(sorted_df) // 2
-    indices.add(int(sorted_df.index[mid]))
+    # Min, max, median (positional)
+    pos_indices.add(0)
+    pos_indices.add(len(sorted_df) - 1)
+    pos_indices.add(len(sorted_df) // 2)
 
     # Fill remaining with random
-    remaining = max_rows - len(indices)
+    remaining = max_rows - len(pos_indices)
     if remaining > 0:
-        pool = sorted_df.index.difference(list(indices))
-        if len(pool) > 0:
+        pool = [
+            i for i in range(len(sorted_df)) if i not in pos_indices
+        ]
+        if pool:
             n = min(remaining, len(pool))
-            random_idx = sorted_df.loc[pool].sample(
+            rng = sorted_df.iloc[pool].sample(
                 n=n, random_state=seed
-            ).index
-            indices.update(int(i) for i in random_idx)
+            )
+            pos_indices.update(rng.index.tolist())
 
     return pd_runtime.DataFrame(
-        df.loc[list(indices)].head(max_rows)
+        sorted_df.iloc[sorted(pos_indices)].head(max_rows)
     )
 
 
