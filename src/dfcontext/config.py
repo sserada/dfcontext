@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-
 _DEFAULT_BUDGET_RATIO: dict[str, float] = {
     "schema": 0.15,
     "stats": 0.55,
