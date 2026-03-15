@@ -51,6 +51,7 @@ dev = [
     "ruff>=0.4.0",
     "mypy>=1.8",
     "pandas-stubs",
+    "types-PyYAML",
     "build",
     "twine",
 ]
@@ -91,3 +92,8 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "types-pyyaml>=6.0.12.20250915",
+]
