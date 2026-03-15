@@ -12,6 +12,11 @@ if TYPE_CHECKING:
     from dfcontext.analyzers.base import ColumnSummary
 
 
+def _escape_md(text: str) -> str:
+    """Escape pipe characters for Markdown table cells."""
+    return text.replace("|", "\\|")
+
+
 class MarkdownFormatter(BaseFormatter):
     """Format output as Markdown."""
 
@@ -30,7 +35,8 @@ class MarkdownFormatter(BaseFormatter):
             dtype = str(df[col].dtype)
             non_null_pct = df[col].notna().mean() * 100
             lines.append(
-                f"| {col} | {dtype} | {non_null_pct:.0f}% |"
+                f"| {_escape_md(str(col))} | {dtype} "
+                f"| {non_null_pct:.0f}% |"
             )
         return "\n".join(lines)
 
@@ -57,11 +63,17 @@ class MarkdownFormatter(BaseFormatter):
         sample = df.head(max_rows)
         cols = list(sample.columns)
 
-        header = "| " + " | ".join(str(c) for c in cols) + " |"
+        header = (
+            "| "
+            + " | ".join(_escape_md(str(c)) for c in cols)
+            + " |"
+        )
         sep = "|" + "|".join("---" for _ in cols) + "|"
         rows: list[str] = []
         for _, row in sample.iterrows():
-            vals = " | ".join(str(row[c]) for c in cols)
+            vals = " | ".join(
+                _escape_md(str(row[c])) for c in cols
+            )
             rows.append(f"| {vals} |")
 
         lines = [

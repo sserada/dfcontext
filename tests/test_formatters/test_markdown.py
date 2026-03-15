@@ -79,3 +79,18 @@ class TestMarkdownFormatter:
         result = fmt.format_stats([summary])
 
         assert "Non-null: 75%" in result
+
+    def test_pipe_in_column_name_escaped(self) -> None:
+        df = pd.DataFrame({"col|pipe": [1, 2], "normal": [3, 4]})
+        fmt = MarkdownFormatter()
+        schema = fmt.format_schema(df)
+
+        assert "col\\|pipe" in schema
+        assert schema.count("|") > 0  # Table structure intact
+
+    def test_pipe_in_values_escaped(self) -> None:
+        df = pd.DataFrame({"x": ["a|b", "c|d"]})
+        fmt = MarkdownFormatter()
+        result = fmt.format_samples(df, max_rows=2)
+
+        assert "a\\|b" in result
