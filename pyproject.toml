@@ -1,0 +1,93 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dfcontext"
+dynamic = ["version"]
+description = "Generate optimal LLM context from pandas DataFrames within a token budget"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "So" },
+]
+keywords = [
+    "pandas",
+    "llm",
+    "context",
+    "dataframe",
+    "token",
+    "ai",
+    "data-science",
+    "prompt-engineering",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pandas>=1.5.0",
+    "numpy>=1.23.0",
+]
+
+[project.optional-dependencies]
+tiktoken = ["tiktoken>=0.5.0"]
+yaml = ["pyyaml>=6.0"]
+all = ["tiktoken>=0.5.0", "pyyaml>=6.0"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "ruff>=0.4.0",
+    "mypy>=1.8",
+    "pandas-stubs",
+    "build",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://github.com/sserada/dfcontext"
+Repository = "https://github.com/sserada/dfcontext"
+Issues = "https://github.com/sserada/dfcontext/issues"
+Documentation = "https://github.com/sserada/dfcontext#readme"
+
+[tool.hatch.version]
+path = "src/dfcontext/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/dfcontext"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dfcontext"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "TCH"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = "tiktoken.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
