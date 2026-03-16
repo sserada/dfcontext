@@ -67,6 +67,9 @@ def extract_stats_block(s: ColumnSummary) -> StatsBlock:
             )
         elif "skewness" in stats:
             lines.append(f"Skewness: {stats['skewness']}")
+        if "outlier_rate" in stats:
+            pct = stats["outlier_rate"] * 100
+            lines.append(f"Outliers: {pct:.1f}% beyond 1.5×IQR")
         if s.distribution_sketch:
             lines.append(f"Distribution: [{s.distribution_sketch}]")
 
