@@ -26,6 +26,7 @@ class BooleanAnalyzer(BaseAnalyzer):
         Returns
         -------
         ColumnSummary
+
         """
         info = self._base_info(series, "boolean")
         valid = series.dropna()

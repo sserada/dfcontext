@@ -33,6 +33,7 @@ class TextAnalyzer(BaseAnalyzer):
         Returns
         -------
         ColumnSummary
+
         """
         info = self._base_info(series, "text")
         valid = series.dropna().astype(str)
@@ -76,6 +77,7 @@ def _detect_patterns(
     -------
     list[str]
         Names of detected patterns.
+
     """
     sample = series.head(sample_size)
     detected: list[str] = []

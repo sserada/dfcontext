@@ -38,6 +38,7 @@ class RepresentativeSampler:
         -------
         pd.DataFrame
             A subset of representative rows.
+
         """
         if df.empty or max_rows <= 0:
             return pd_runtime.DataFrame(df.head(0))

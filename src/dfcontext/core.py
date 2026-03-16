@@ -41,7 +41,7 @@ _FORMATTERS: dict[str, BaseFormatter] = {
 def to_context(
     df: pd.DataFrame,
     token_budget: int = 2000,
-    format: Literal["markdown", "plain", "yaml"] = "markdown",  # noqa: A002
+    format: Literal["markdown", "plain", "yaml"] = "markdown",
     hint: str | None = None,
     include_schema: bool = True,
     include_stats: bool = True,
@@ -82,6 +82,7 @@ def to_context(
     -------
     str
         Context string for use with an LLM.
+
     """
     if config is not None:
         cfg = config
@@ -172,6 +173,7 @@ def analyze_columns(
     -------
     dict[str, ColumnSummary]
         Column name to summary mapping.
+
     """
     cols = columns or list(df.columns)
     result: dict[str, ColumnSummary] = {}
@@ -198,6 +200,7 @@ def count_tokens(
     -------
     int
         Token count.
+
     """
     tc = TokenCounter(tokenizer)
     return tc.count(text)

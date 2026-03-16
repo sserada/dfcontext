@@ -26,6 +26,7 @@ class BudgetPlan:
         Tokens allocated to sample rows.
     total_budget : int
         Total token budget.
+
     """
 
     schema_budget: int
@@ -41,6 +42,7 @@ class TokenBudgetAllocator:
     ----------
     budget_ratio : dict[str, float]
         Ratios for schema, stats, and samples sections.
+
     """
 
     def __init__(
@@ -82,6 +84,7 @@ class TokenBudgetAllocator:
         Returns
         -------
         BudgetPlan
+
         """
         # Compute active ratios
         active: dict[str, float] = {}
@@ -148,6 +151,7 @@ def _distribute_column_budget(
     -------
     dict[str, int]
         Budget per column.
+
     """
     if not columns:
         return {}
