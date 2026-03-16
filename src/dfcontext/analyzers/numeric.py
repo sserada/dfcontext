@@ -58,9 +58,22 @@ class NumericAnalyzer(BaseAnalyzer):
         if budget > 50:
             stats["median"] = float(valid.median())
             stats["std"] = float(valid.std())
-            stats["q1"] = float(valid.quantile(0.25))
-            stats["q3"] = float(valid.quantile(0.75))
+            q1 = float(valid.quantile(0.25))
+            q3 = float(valid.quantile(0.75))
+            stats["q1"] = q1
+            stats["q3"] = q3
             stats["zero_rate"] = float((valid == 0).mean())
+
+            # Outlier detection via IQR method
+            iqr = q3 - q1
+            if iqr > 0:
+                lower = q1 - 1.5 * iqr
+                upper = q3 + 1.5 * iqr
+                outlier_rate = float(
+                    ((valid < lower) | (valid > upper)).mean()
+                )
+                if outlier_rate > 0.01:
+                    stats["outlier_rate"] = round(outlier_rate, 4)
 
         # Tier 3: budget > 200
         if budget > 200 and len(valid) >= 10:

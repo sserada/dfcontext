@@ -78,6 +78,23 @@ class TestNumericAnalyzer:
         assert "p5" not in summary.stats
         assert "skewness" not in summary.stats
 
+    def test_outlier_detection(self) -> None:
+        # Exponential distribution has significant outliers
+        np.random.seed(42)
+        s = pd.Series(np.random.exponential(100, 1000), name="exp")
+        analyzer = NumericAnalyzer()
+        summary = analyzer.analyze(s, budget=100)
+
+        assert "outlier_rate" in summary.stats
+        assert summary.stats["outlier_rate"] > 0
+
+    def test_no_outliers_uniform(self) -> None:
+        s = pd.Series(range(100), name="uniform")
+        analyzer = NumericAnalyzer()
+        summary = analyzer.analyze(s, budget=100)
+
+        assert "outlier_rate" not in summary.stats
+
     def test_distribution_sketch(self) -> None:
         s = pd.Series(range(1000), name="d")
         analyzer = NumericAnalyzer()
