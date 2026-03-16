@@ -242,6 +242,48 @@ def count_tokens(
     return tc.count(text)
 
 
+def compare_contexts(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+    label_a: str = "Dataset A",
+    label_b: str = "Dataset B",
+    token_budget: int = 2000,
+    hint: str | None = None,
+    **kwargs: object,
+) -> str:
+    """Generate a comparison context from two DataFrames.
+
+    Splits the token budget evenly and produces a side-by-side summary.
+
+    Parameters
+    ----------
+    df_a : pd.DataFrame
+        First DataFrame.
+    df_b : pd.DataFrame
+        Second DataFrame.
+    label_a : str
+        Label for the first dataset.
+    label_b : str
+        Label for the second dataset.
+    token_budget : int
+        Total token budget (split between both datasets).
+    hint : str or None
+        Query hint applied to both datasets.
+    **kwargs : object
+        Additional keyword arguments passed to ``to_context()``.
+
+    Returns
+    -------
+    str
+        Combined context string for comparison.
+
+    """
+    per_dataset = token_budget // 2
+    ctx_a = to_context(df_a, token_budget=per_dataset, hint=hint, **kwargs)  # type: ignore[arg-type]
+    ctx_b = to_context(df_b, token_budget=per_dataset, hint=hint, **kwargs)  # type: ignore[arg-type]
+    return f"## {label_a}\n{ctx_a}\n\n## {label_b}\n{ctx_b}"
+
+
 def _analyze_all_columns(
     df: pd.DataFrame,
     column_budgets: dict[str, int],
