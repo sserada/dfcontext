@@ -48,6 +48,7 @@ class ContextConfig:
     include_stats: bool = True
     include_samples: bool = True
     max_sample_rows: int = 5
+    include_correlations: bool = False
     tokenizer: str = "cl100k_base"
     budget_ratio: dict[str, float] = field(
         default_factory=lambda: dict(_DEFAULT_BUDGET_RATIO)
