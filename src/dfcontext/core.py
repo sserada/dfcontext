@@ -12,6 +12,7 @@ from dfcontext.analyzers.numeric import NumericAnalyzer
 from dfcontext.analyzers.text import TextAnalyzer
 from dfcontext.budget import TokenBudgetAllocator
 from dfcontext.config import ContextConfig
+from dfcontext.correlations import find_top_correlations, format_correlations
 from dfcontext.formatters.markdown import MarkdownFormatter
 from dfcontext.formatters.plain import PlainTextFormatter
 from dfcontext.formatters.yaml_fmt import YAMLFormatter
@@ -46,6 +47,7 @@ def to_context(
     include_schema: bool = True,
     include_stats: bool = True,
     include_samples: bool = True,
+    include_correlations: bool = False,
     max_sample_rows: int = 5,
     columns: list[str] | None = None,
     tokenizer: str = "cl100k_base",
@@ -69,6 +71,8 @@ def to_context(
         Include column statistics.
     include_samples : bool
         Include sample rows.
+    include_correlations : bool
+        Include numeric column correlations.
     max_sample_rows : int
         Maximum sample rows to include.
     columns : list[str] or None
@@ -94,6 +98,7 @@ def to_context(
             include_schema=include_schema,
             include_stats=include_stats,
             include_samples=include_samples,
+            include_correlations=include_correlations,
             max_sample_rows=max_sample_rows,
             tokenizer=tokenizer,
         )
@@ -149,6 +154,13 @@ def to_context(
         )
         if samples_text:
             parts.append(samples_text)
+
+    # Correlations section
+    if cfg.include_correlations:
+        corr_pairs = find_top_correlations(df)
+        corr_text = format_correlations(corr_pairs)
+        if corr_text:
+            parts.append(corr_text)
 
     result = "\n\n".join(parts)
 
