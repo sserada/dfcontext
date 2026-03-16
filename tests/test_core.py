@@ -116,6 +116,12 @@ class TestToContextBudget:
         result = to_context(df, token_budget=50)
         assert len(result) > 0
 
+    def test_integer_column_names(self) -> None:
+        df = pd.DataFrame({0: [1, 2, 3], 1: ["a", "b", "c"]})
+        result = to_context(df, token_budget=500)
+        assert isinstance(result, str)
+        assert len(result) > 0
+
     def test_large_dataframe_within_budget(self) -> None:
         np.random.seed(42)
         df = pd.DataFrame({
