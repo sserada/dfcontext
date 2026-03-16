@@ -119,6 +119,21 @@ class TestTokenBudgetAllocator:
         total_col_budget = sum(plan.column_budgets.values())
         assert total_col_budget <= 100
 
+    def test_column_priority_boosts(self) -> None:
+        df = pd.DataFrame({
+            "important": range(100),
+            "normal": range(100),
+            "minor": range(100),
+        })
+        allocator = TokenBudgetAllocator()
+        plan = allocator.allocate(
+            df,
+            total_budget=1000,
+            column_priority={"important": 5.0, "minor": 0.1},
+        )
+        assert plan.column_budgets["important"] > plan.column_budgets["normal"]
+        assert plan.column_budgets["normal"] > plan.column_budgets["minor"]
+
     def test_integer_column_names(self) -> None:
         df = pd.DataFrame({0: [1, 2], 1: [3, 4], 2: [5, 6]})
         allocator = TokenBudgetAllocator()
