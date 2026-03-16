@@ -173,6 +173,15 @@ def to_context(
 
     # Final budget enforcement
     if not tc.fits(result, cfg.token_budget):
+        import warnings
+
+        warnings.warn(
+            f"Output ({tc.count(result)} tokens) exceeds token_budget "
+            f"({cfg.token_budget}). Output has been truncated. "
+            "Consider increasing token_budget or disabling sections.",
+            UserWarning,
+            stacklevel=2,
+        )
         result = tc.truncate(result, cfg.token_budget)
 
     return result
