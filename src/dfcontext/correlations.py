@@ -42,7 +42,14 @@ def find_top_correlations(
     cols = list(corr_matrix.columns)
     for i, col_a in enumerate(cols):
         for col_b in cols[i + 1 :]:
-            val = float(corr_matrix.loc[col_a, col_b])
+            import numpy as np
+
+            raw = corr_matrix.at[col_a, col_b]
+            val = (
+                float(raw)
+                if isinstance(raw, (int, float, np.floating))
+                else 0.0
+            )
             if pd.notna(val) and abs(val) >= min_abs_corr:
                 pairs.append((col_a, col_b, round(val, 3)))
 
