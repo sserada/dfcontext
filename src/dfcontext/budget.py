@@ -191,10 +191,14 @@ def _distribute_column_budget(
         per_col = stats_budget // max(len(columns), 1)
         return {col: per_col for col in columns}
 
+    # Dynamic minimum: ensure total doesn't exceed stats_budget
+    min_per_col = min(10, stats_budget // max(len(columns), 1))
+
     result: dict[str, int] = {}
     for col in columns:
         result[col] = max(
-            10, int(stats_budget * weights[col] / total_weight)
+            min_per_col,
+            int(stats_budget * weights[col] / total_weight),
         )
 
     return result
