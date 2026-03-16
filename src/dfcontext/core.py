@@ -51,6 +51,7 @@ def to_context(
     max_sample_rows: int = 5,
     columns: list[str] | None = None,
     exclude_columns: list[str] | None = None,
+    column_priority: dict[str, float] | None = None,
     tokenizer: str = "cl100k_base",
     config: ContextConfig | None = None,
 ) -> str:
@@ -80,6 +81,8 @@ def to_context(
         Subset of columns to include. ``None`` means all.
     exclude_columns : list[str] or None
         Columns to exclude (e.g. sensitive data). Applied after ``columns``.
+    column_priority : dict[str, float] or None
+        Explicit weight multipliers per column for budget allocation.
     tokenizer : str
         tiktoken encoding name.
     config : ContextConfig or None
@@ -103,6 +106,7 @@ def to_context(
             include_samples=include_samples,
             include_correlations=include_correlations,
             max_sample_rows=max_sample_rows,
+            column_priority=column_priority,
             tokenizer=tokenizer,
         )
 
@@ -129,6 +133,7 @@ def to_context(
         include_schema=cfg.include_schema,
         include_stats=cfg.include_stats,
         include_samples=cfg.include_samples,
+        column_priority=cfg.column_priority,
     )
 
     parts: list[str] = []

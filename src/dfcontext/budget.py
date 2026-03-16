@@ -65,6 +65,7 @@ class TokenBudgetAllocator:
         include_schema: bool = True,
         include_stats: bool = True,
         include_samples: bool = True,
+        column_priority: dict[str, float] | None = None,
     ) -> BudgetPlan:
         """Create a budget plan for the given DataFrame.
 
@@ -82,6 +83,8 @@ class TokenBudgetAllocator:
             Whether stats section is enabled.
         include_samples : bool
             Whether samples section is enabled.
+        column_priority : dict[str, float] or None
+            Explicit weight multipliers per column.
 
         Returns
         -------
@@ -119,7 +122,7 @@ class TokenBudgetAllocator:
         # Distribute stats budget across columns
         columns = list(df.columns)
         column_budgets = _distribute_column_budget(
-            df, columns, stats_budget, hint
+            df, columns, stats_budget, hint, column_priority
         )
 
         return BudgetPlan(
@@ -135,6 +138,7 @@ def _distribute_column_budget(
     columns: Sequence[object],
     stats_budget: int,
     hint: str | None,
+    column_priority: dict[str, float] | None = None,
 ) -> dict[str, int]:
     """Distribute stats budget across columns.
 
@@ -142,12 +146,14 @@ def _distribute_column_budget(
     ----------
     df : pd.DataFrame
         The DataFrame.
-    columns : list[str]
+    columns : Sequence[object]
         Column names to distribute budget across.
     stats_budget : int
         Total stats budget to distribute.
     hint : str or None
         Query hint for boosting relevant columns.
+    column_priority : dict[str, float] or None
+        Explicit weight multipliers per column.
 
     Returns
     -------
@@ -186,6 +192,13 @@ def _distribute_column_budget(
             )
             if relevance > 0:
                 weights[col] *= 1.0 + relevance * 2.0
+
+    # Apply explicit column priority
+    if column_priority:
+        for col in columns:
+            col_str = str(col)
+            if col_str in column_priority:
+                weights[col] *= column_priority[col_str]
 
     # Normalize and allocate
     total_weight = sum(weights.values())
