@@ -57,6 +57,16 @@ def extract_stats_block(s: ColumnSummary) -> StatsBlock:
             lines.append(f"Mean: {stats['mean']:,.2f}")
         if "std" in stats:
             lines.append(f"Std: {stats['std']:,.2f}")
+        if "p5" in stats and "p95" in stats:
+            lines.append(
+                f"P5/P95: {stats['p5']:,.2f} / {stats['p95']:,.2f}"
+            )
+        if "skew_label" in stats:
+            lines.append(
+                f"Skewness: {stats['skewness']} ({stats['skew_label']})"
+            )
+        elif "skewness" in stats:
+            lines.append(f"Skewness: {stats['skewness']}")
         if s.distribution_sketch:
             lines.append(f"Distribution: [{s.distribution_sketch}]")
 
