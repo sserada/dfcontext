@@ -50,6 +50,7 @@ def to_context(
     include_correlations: bool = False,
     max_sample_rows: int = 5,
     columns: list[str] | None = None,
+    exclude_columns: list[str] | None = None,
     tokenizer: str = "cl100k_base",
     config: ContextConfig | None = None,
 ) -> str:
@@ -77,6 +78,8 @@ def to_context(
         Maximum sample rows to include.
     columns : list[str] or None
         Subset of columns to include. ``None`` means all.
+    exclude_columns : list[str] or None
+        Columns to exclude (e.g. sensitive data). Applied after ``columns``.
     tokenizer : str
         tiktoken encoding name.
     config : ContextConfig or None
@@ -106,9 +109,13 @@ def to_context(
     if df.empty:
         return ""
 
-    # Select columns
+    # Select / exclude columns
     if columns is not None:
         df = df[columns]
+    if exclude_columns is not None:
+        df = df.drop(
+            columns=[c for c in exclude_columns if c in df.columns]
+        )
 
     tc = TokenCounter(cfg.tokenizer)
     formatter = _FORMATTERS[cfg.format]

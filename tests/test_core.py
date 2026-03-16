@@ -133,6 +133,20 @@ class TestToContextBudget:
         assert tc.count(result) <= budget
 
 
+class TestExcludeColumns:
+    def test_exclude_columns(self) -> None:
+        df = pd.DataFrame({"a": [1], "secret": [2], "c": [3]})
+        result = to_context(df, exclude_columns=["secret"])
+        assert "a" in result
+        assert "c" in result
+        assert "secret" not in result
+
+    def test_exclude_nonexistent_column(self) -> None:
+        df = pd.DataFrame({"a": [1]})
+        result = to_context(df, exclude_columns=["nonexistent"])
+        assert "a" in result
+
+
 class TestToContextConfig:
     def test_accepts_config_object(self) -> None:
         df = pd.DataFrame({"x": [1, 2, 3]})
