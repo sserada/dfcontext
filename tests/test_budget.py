@@ -106,3 +106,15 @@ class TestTokenBudgetAllocator:
         plan = allocator.allocate(df, total_budget=1000)
 
         assert plan.schema_budget == 500
+
+    def test_many_columns_low_budget_no_overflow(self) -> None:
+        df = pd.DataFrame({f"c{i}": [1] for i in range(50)})
+        allocator = TokenBudgetAllocator()
+        plan = allocator.allocate(
+            df,
+            total_budget=100,
+            include_schema=False,
+            include_samples=False,
+        )
+        total_col_budget = sum(plan.column_budgets.values())
+        assert total_col_budget <= 100
