@@ -82,7 +82,10 @@ True: 6.0% | False: 94.0%
 
 - **Column-type-aware analysis** — different strategies for numeric, categorical, text, datetime, and boolean columns
 - **Token budget management** — output always fits within your specified token limit
+- **Adaptive detail** — higher budgets produce richer stats (percentiles, skewness, outlier rates)
 - **Query hints** — tell it what you're analyzing, and it prioritizes relevant columns
+- **Correlation detection** — find relationships between numeric columns
+- **Outlier indicators** — flag columns with potential outliers (IQR method)
 - **Multiple formats** — Markdown, plain text, or YAML output
 - **Zero LLM dependency** — pure data processing, works with any LLM provider
 - **Fast** — handles 100K rows in under a second
@@ -125,17 +128,32 @@ config = ContextConfig(
 ctx = to_context(df, config=config)
 ```
 
+### Correlation Detection
+
+Find relationships between numeric columns:
+
+```python
+ctx = to_context(df, token_budget=2000, include_correlations=True)
+# Output includes: "sales ↔ quantity: r=+0.823 (strong positive)"
+```
+
 ### Column Analysis
 
 Get structured analysis results as Python objects:
 
 ```python
-from dfcontext import analyze_columns
+from dfcontext import ColumnSummary, analyze_columns
 
 summaries = analyze_columns(df)
 for name, s in summaries.items():
     print(f"{name}: {s.column_type}, {s.unique_count} unique")
+    if s.distribution_sketch:
+        print(f"  histogram: [{s.distribution_sketch}]")
+    if "outlier_rate" in s.stats:
+        print(f"  outliers: {s.stats['outlier_rate'] * 100:.1f}%")
 ```
+
+`ColumnSummary` fields: `name`, `dtype`, `column_type`, `non_null_rate`, `unique_count`, `stats` (dict), `sample_values` (list), `distribution_sketch` (str | None).
 
 ### Token Counting
 
