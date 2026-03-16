@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any
 from dfcontext.hints import compute_hint_relevance
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import pandas as pd
 
 
@@ -130,7 +132,7 @@ class TokenBudgetAllocator:
 
 def _distribute_column_budget(
     df: pd.DataFrame,
-    columns: list[str],
+    columns: Sequence[object],
     stats_budget: int,
     hint: str | None,
 ) -> dict[str, int]:
@@ -157,7 +159,7 @@ def _distribute_column_budget(
         return {}
 
     # Base weight: equal distribution
-    weights: dict[str, float] = {col: 1.0 for col in columns}
+    weights: dict[object, float] = {col: 1.0 for col in columns}
 
     # Boost by cardinality (more unique values = more interesting)
     for col in columns:
@@ -180,7 +182,7 @@ def _distribute_column_budget(
             with contextlib.suppress(Exception):
                 sample_vals = df[col].dropna().head(5).tolist()
             relevance = compute_hint_relevance(
-                hint, col, sample_vals
+                hint, str(col), sample_vals
             )
             if relevance > 0:
                 weights[col] *= 1.0 + relevance * 2.0
@@ -189,14 +191,14 @@ def _distribute_column_budget(
     total_weight = sum(weights.values())
     if total_weight == 0:
         per_col = stats_budget // max(len(columns), 1)
-        return {col: per_col for col in columns}
+        return {str(col): per_col for col in columns}
 
     # Dynamic minimum: ensure total doesn't exceed stats_budget
     min_per_col = min(10, stats_budget // max(len(columns), 1))
 
     result: dict[str, int] = {}
     for col in columns:
-        result[col] = max(
+        result[str(col)] = max(
             min_per_col,
             int(stats_budget * weights[col] / total_weight),
         )

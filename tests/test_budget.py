@@ -118,3 +118,12 @@ class TestTokenBudgetAllocator:
         )
         total_col_budget = sum(plan.column_budgets.values())
         assert total_col_budget <= 100
+
+    def test_integer_column_names(self) -> None:
+        df = pd.DataFrame({0: [1, 2], 1: [3, 4], 2: [5, 6]})
+        allocator = TokenBudgetAllocator()
+        plan = allocator.allocate(df, total_budget=1000)
+
+        # All keys should be strings
+        assert all(isinstance(k, str) for k in plan.column_budgets)
+        assert "0" in plan.column_budgets
