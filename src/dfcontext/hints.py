@@ -28,6 +28,7 @@ def compute_hint_relevance(
     -------
     float
         Relevance score between 0.0 and 1.0.
+
     """
     score = 0.0
     hint_lower = hint.lower()

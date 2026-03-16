@@ -26,6 +26,7 @@ class DatetimeAnalyzer(BaseAnalyzer):
         Returns
         -------
         ColumnSummary
+
         """
         info = self._base_info(series, "datetime")
         valid = series.dropna()
@@ -59,6 +60,7 @@ def _estimate_granularity(series: pd.Series) -> str | None:
     -------
     str or None
         Estimated granularity label, or ``None`` if undetermined.
+
     """
     if len(series) < 2:
         return None

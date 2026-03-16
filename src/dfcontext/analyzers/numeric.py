@@ -30,6 +30,7 @@ class NumericAnalyzer(BaseAnalyzer):
         Returns
         -------
         ColumnSummary
+
         """
         info = self._base_info(series, "numeric")
         valid = series.dropna()
@@ -81,6 +82,7 @@ def _mini_histogram(series: pd.Series, bins: int = 8) -> str:
     -------
     str
         A string like ``"▁▃▇█▅▂▁▁"``.
+
     """
     if len(series) == 0:
         return ""

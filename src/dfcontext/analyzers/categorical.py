@@ -26,6 +26,7 @@ class CategoricalAnalyzer(BaseAnalyzer):
         Returns
         -------
         ColumnSummary
+
         """
         info = self._base_info(series, "categorical")
         valid = series.dropna()

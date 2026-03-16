@@ -7,10 +7,10 @@ from dfcontext.config import ContextConfig
 from dfcontext.core import analyze_columns, count_tokens, to_context
 
 __all__ = [
-    "__version__",
     "BudgetPlan",
     "ColumnSummary",
     "ContextConfig",
+    "__version__",
     "analyze_columns",
     "count_tokens",
     "to_context",

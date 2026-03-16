@@ -35,6 +35,7 @@ class ColumnSummary:
         Representative sample values.
     distribution_sketch : str or None
         Mini histogram for numeric columns.
+
     """
 
     name: str
@@ -66,6 +67,7 @@ class BaseAnalyzer(ABC):
         Returns
         -------
         ColumnSummary
+
         """
 
     def _base_info(
@@ -96,6 +98,7 @@ def classify_column(
     Returns
     -------
     ColumnType
+
     """
     import pandas as pd
 

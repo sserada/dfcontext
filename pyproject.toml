@@ -77,7 +77,18 @@ line-length = 88
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "TCH"]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "TCH", "D", "PT", "RUF"]
+ignore = [
+    "D203",   # incompatible with D211
+    "D213",   # incompatible with D212
+    "D105",   # missing docstring in magic method (__post_init__ etc.)
+    "D107",   # missing docstring in __init__ (class docstring suffices)
+    "RUF001", # ambiguous unicode (× multiplication sign is intentional)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]         # No docstrings required in tests
+"examples/**" = ["D"]      # No docstrings required in examples
 
 [tool.mypy]
 python_version = "3.10"

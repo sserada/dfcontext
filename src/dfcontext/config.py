@@ -38,6 +38,7 @@ class ContextConfig:
         tiktoken encoding name.
     budget_ratio : dict[str, float]
         Token budget allocation ratios for schema, stats, and samples.
+
     """
 
     token_budget: int = 2000

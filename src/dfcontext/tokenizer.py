@@ -18,6 +18,7 @@ class TokenCounter:
         tiktoken encoding name (e.g. "cl100k_base"). Used only when
         tiktoken is installed; otherwise falls back to character-based
         estimation.
+
     """
 
     def __init__(self, encoding_name: str = "cl100k_base") -> None:
@@ -30,7 +31,7 @@ class TokenCounter:
 
             return tiktoken.get_encoding(self._encoding_name)
         except ImportError:
-            global _FALLBACK_WARNED  # noqa: PLW0603
+            global _FALLBACK_WARNED
             if not _FALLBACK_WARNED:
                 warnings.warn(
                     "tiktoken is not installed. Token counts will be estimated "
@@ -54,6 +55,7 @@ class TokenCounter:
         -------
         int
             Token count (exact with tiktoken, estimated otherwise).
+
         """
         if not text:
             return 0
@@ -74,6 +76,7 @@ class TokenCounter:
         Returns
         -------
         bool
+
         """
         return self.count(text) <= budget
 
@@ -91,6 +94,7 @@ class TokenCounter:
         -------
         str
             The (possibly truncated) text.
+
         """
         if budget <= 0:
             return ""
