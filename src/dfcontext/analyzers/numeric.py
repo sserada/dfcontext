@@ -20,6 +20,11 @@ class NumericAnalyzer(BaseAnalyzer):
     def analyze(self, series: pd.Series, budget: int) -> ColumnSummary:
         """Analyze a numeric column.
 
+        Scales detail with budget:
+        - Tier 1 (any): min, max, mean, histogram
+        - Tier 2 (>50): +median, std, quartiles, zero rate
+        - Tier 3 (>200): +percentiles (5th/95th), skewness, kurtosis
+
         Parameters
         ----------
         series : pd.Series
@@ -44,18 +49,30 @@ class NumericAnalyzer(BaseAnalyzer):
                 sample_values=[],
             )
 
+        # Tier 1: always included
         stats["min"] = float(valid.min())
         stats["max"] = float(valid.max())
         stats["mean"] = float(valid.mean())
-        stats["median"] = float(valid.median())
-        stats["std"] = float(valid.std())
 
+        # Tier 2: budget > 50
         if budget > 50:
-            q1 = float(valid.quantile(0.25))
-            q3 = float(valid.quantile(0.75))
-            stats["q1"] = q1
-            stats["q3"] = q3
+            stats["median"] = float(valid.median())
+            stats["std"] = float(valid.std())
+            stats["q1"] = float(valid.quantile(0.25))
+            stats["q3"] = float(valid.quantile(0.75))
             stats["zero_rate"] = float((valid == 0).mean())
+
+        # Tier 3: budget > 200
+        if budget > 200 and len(valid) >= 10:
+            stats["p5"] = float(valid.quantile(0.05))
+            stats["p95"] = float(valid.quantile(0.95))
+            skew_val = valid.skew()
+            skew = float(skew_val) if isinstance(skew_val, (int, float)) else 0.0
+            stats["skewness"] = round(skew, 3)
+            if abs(skew) > 1:
+                stats["skew_label"] = (
+                    "right-skewed" if skew > 0 else "left-skewed"
+                )
 
         histogram = _mini_histogram(valid)
         samples = valid.head(5).tolist()

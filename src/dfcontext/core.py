@@ -137,12 +137,15 @@ def to_context(
         if stats_text:
             parts.append(stats_text)
 
-    # Samples section
+    # Samples section — scale row count with available budget
     if cfg.include_samples and cfg.max_sample_rows > 0:
+        # Estimate ~30 tokens per sample row as a baseline
+        budget_rows = max(1, plan.sample_budget // 30)
+        effective_rows = min(cfg.max_sample_rows, budget_rows)
         sampler = RepresentativeSampler()
-        sample_df = sampler.sample(df, cfg.max_sample_rows)
+        sample_df = sampler.sample(df, effective_rows)
         samples_text = formatter.format_samples(
-            sample_df, cfg.max_sample_rows
+            sample_df, effective_rows
         )
         if samples_text:
             parts.append(samples_text)

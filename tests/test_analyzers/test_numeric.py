@@ -60,6 +60,24 @@ class TestNumericAnalyzer:
 
         assert "q1" not in summary.stats
 
+    def test_tier3_with_high_budget(self) -> None:
+        s = pd.Series(np.random.exponential(100, 1000), name="exp")
+        analyzer = NumericAnalyzer()
+        summary = analyzer.analyze(s, budget=300)
+
+        assert "p5" in summary.stats
+        assert "p95" in summary.stats
+        assert "skewness" in summary.stats
+        assert "skew_label" in summary.stats  # exponential is right-skewed
+
+    def test_tier3_excluded_with_low_budget(self) -> None:
+        s = pd.Series(range(100), name="lin")
+        analyzer = NumericAnalyzer()
+        summary = analyzer.analyze(s, budget=100)
+
+        assert "p5" not in summary.stats
+        assert "skewness" not in summary.stats
+
     def test_distribution_sketch(self) -> None:
         s = pd.Series(range(1000), name="d")
         analyzer = NumericAnalyzer()
