@@ -133,6 +133,20 @@ class TestToContextBudget:
         assert tc.count(result) <= budget
 
 
+class TestBudgetWarning:
+    def test_warns_on_truncation(self) -> None:
+        import warnings
+
+        df = pd.DataFrame({f"c{i}": range(100) for i in range(20)})
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            to_context(df, token_budget=50)
+            truncation_warnings = [
+                x for x in w if "truncated" in str(x.message)
+            ]
+            assert len(truncation_warnings) >= 1
+
+
 class TestExcludeColumns:
     def test_exclude_columns(self) -> None:
         df = pd.DataFrame({"a": [1], "secret": [2], "c": [3]})
