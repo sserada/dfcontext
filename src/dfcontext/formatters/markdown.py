@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from dfcontext.formatters.base import BaseFormatter
+from dfcontext.formatters.base import BaseFormatter, StatsBlock, extract_stats_block
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -44,11 +44,10 @@ class MarkdownFormatter(BaseFormatter):
         self, summaries: list[ColumnSummary]
     ) -> str:
         """Format column statistics as Markdown sections."""
-        parts: list[str] = []
-        for s in summaries:
-            parts.append(
-                _format_column_stats_md(s)
-            )
+        parts = [
+            _render_stats_md(extract_stats_block(s))
+            for s in summaries
+        ]
         if not parts:
             return ""
         return "## Column statistics\n" + "\n\n".join(parts)
@@ -85,61 +84,28 @@ class MarkdownFormatter(BaseFormatter):
         return "\n".join(lines)
 
 
-def _format_column_stats_md(s: ColumnSummary) -> str:
-    """Format a single column's statistics."""
-    type_info: str = s.column_type
-    if s.column_type == "categorical":
-        type_info = f"categorical, {s.unique_count} unique"
+def _render_stats_md(block: StatsBlock) -> str:
+    """Render a StatsBlock as Markdown."""
+    lines = [f"### {block.name} ({block.header_label})"]
 
-    lines = [f"### {s.name} ({type_info})"]
+    # Combine numeric range + mean + std on one line for compactness
+    if block.column_type == "numeric" and len(block.lines) >= 2:
+        # Merge Range + Mean + Std into single line
+        combined = block.lines[0]  # Range
+        for ln in block.lines[1:]:
+            if ln.startswith("Mean:") or ln.startswith("Std:"):
+                combined += f" | {ln}"
+            else:
+                lines.append(combined)
+                combined = ln
+        lines.append(combined)
+    elif block.column_type == "categorical" and block.lines:
+        lines.append("Top values: " + block.lines[0])
+        lines.extend(block.lines[1:])
+    else:
+        lines.extend(block.lines)
 
-    stats: dict[str, Any] = s.stats
-
-    if s.column_type == "numeric":
-        if "min" in stats and "max" in stats:
-            line = f"Range: {stats['min']:,.2f} — {stats['max']:,.2f}"
-            if "mean" in stats:
-                line += f" | Mean: {stats['mean']:,.2f}"
-            if "std" in stats:
-                line += f" | Std: {stats['std']:,.2f}"
-            lines.append(line)
-        if s.distribution_sketch:
-            lines.append(f"Distribution: [{s.distribution_sketch}]")
-
-    elif s.column_type == "categorical":
-        top = stats.get("top_values", {})
-        if top:
-            entries = [f"{k} ({v}%)" for k, v in top.items()]
-            lines.append("Top values: " + ", ".join(entries))
-
-    elif s.column_type == "text":
-        if "avg_length" in stats:
-            lines.append(
-                f"Avg length: {stats['avg_length']} chars "
-                f"(min: {stats.get('min_length', '?')}, "
-                f"max: {stats.get('max_length', '?')})"
-            )
-        patterns = stats.get("patterns", [])
-        if patterns:
-            lines.append(
-                "Detected patterns: " + ", ".join(patterns)
-            )
-
-    elif s.column_type == "datetime":
-        if "min" in stats and "max" in stats:
-            line = f"Range: {stats['min']} — {stats['max']}"
-            if "granularity" in stats:
-                line += f" | Granularity: {stats['granularity']}"
-            lines.append(line)
-
-    elif s.column_type == "boolean":
-        if "true_rate" in stats:
-            tr = stats["true_rate"] * 100
-            fr = stats["false_rate"] * 100
-            lines.append(f"True: {tr:.1f}% | False: {fr:.1f}%")
-
-    # Non-null rate (if not 100%)
-    if s.non_null_rate < 1.0:
-        lines.append(f"Non-null: {s.non_null_rate * 100:.0f}%")
+    if block.non_null_pct is not None:
+        lines.append(f"Non-null: {block.non_null_pct}%")
 
     return "\n".join(lines)
