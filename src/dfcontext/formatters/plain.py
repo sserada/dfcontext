@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from dfcontext.formatters.base import BaseFormatter
+from dfcontext.formatters.base import BaseFormatter, StatsBlock, extract_stats_block
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -35,9 +35,10 @@ class PlainTextFormatter(BaseFormatter):
         self, summaries: list[ColumnSummary]
     ) -> str:
         """Format column statistics as plain text."""
-        parts: list[str] = []
-        for s in summaries:
-            parts.append(_format_column_stats_plain(s))
+        parts = [
+            _render_stats_plain(extract_stats_block(s))
+            for s in summaries
+        ]
         if not parts:
             return ""
         return "Statistics:\n" + "\n\n".join(parts)
@@ -59,55 +60,20 @@ class PlainTextFormatter(BaseFormatter):
         return "\n".join(lines)
 
 
-def _format_column_stats_plain(s: ColumnSummary) -> str:
-    """Format a single column's statistics as plain text."""
-    lines = [f"  {s.name} ({s.column_type}):"]
-    stats: dict[str, Any] = s.stats
+def _render_stats_plain(block: StatsBlock) -> str:
+    """Render a StatsBlock as plain text."""
+    lines = [f"  {block.name} ({block.column_type}):"]
 
-    if s.column_type == "numeric":
-        if "min" in stats:
-            lines.append(
-                f"    Range: {stats['min']:,.2f} to "
-                f"{stats['max']:,.2f}"
-            )
-        if "mean" in stats:
-            lines.append(f"    Mean: {stats['mean']:,.2f}")
-        if s.distribution_sketch:
-            lines.append(
-                f"    Distribution: [{s.distribution_sketch}]"
-            )
+    if block.column_type == "categorical":
+        # Show each value on its own line
+        for ln in block.lines:
+            for entry in ln.split(", "):
+                lines.append(f"    {entry}")
+    else:
+        for ln in block.lines:
+            lines.append(f"    {ln}")
 
-    elif s.column_type == "categorical":
-        top = stats.get("top_values", {})
-        if top:
-            for k, v in top.items():
-                lines.append(f"    {k}: {v}%")
-
-    elif s.column_type == "text":
-        if "avg_length" in stats:
-            lines.append(
-                f"    Avg length: {stats['avg_length']} chars"
-            )
-
-    elif s.column_type == "datetime":
-        if "min" in stats:
-            lines.append(
-                f"    Range: {stats['min']} to {stats['max']}"
-            )
-        if "granularity" in stats:
-            lines.append(
-                f"    Granularity: {stats['granularity']}"
-            )
-
-    elif s.column_type == "boolean":
-        if "true_rate" in stats:
-            lines.append(
-                f"    True: {stats['true_rate'] * 100:.1f}%"
-            )
-
-    if s.non_null_rate < 1.0:
-        lines.append(
-            f"    Non-null: {s.non_null_rate * 100:.0f}%"
-        )
+    if block.non_null_pct is not None:
+        lines.append(f"    Non-null: {block.non_null_pct}%")
 
     return "\n".join(lines)

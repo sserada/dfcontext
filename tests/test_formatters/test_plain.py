@@ -49,8 +49,8 @@ class TestPlainTextFormatter:
         result = fmt.format_stats([summary])
 
         assert "region (categorical):" in result
-        assert "East: 40.0%" in result
-        assert "West: 35.0%" in result
+        assert "East (40.0%)" in result
+        assert "West (35.0%)" in result
 
     def test_format_text_stats(self) -> None:
         summary = ColumnSummary(
@@ -84,7 +84,8 @@ class TestPlainTextFormatter:
         result = fmt.format_stats([summary])
 
         assert "ts (datetime):" in result
-        assert "Range: 2024-01-01 to 2024-12-31" in result
+        assert "2024-01-01" in result
+        assert "2024-12-31" in result
         assert "Granularity: daily" in result
 
     def test_format_boolean_stats(self) -> None:
