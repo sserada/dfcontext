@@ -134,6 +134,40 @@ class TestTokenBudgetAllocator:
         assert plan.column_budgets["important"] > plan.column_budgets["normal"]
         assert plan.column_budgets["normal"] > plan.column_budgets["minor"]
 
+    def test_column_priority_extreme_boost_no_overflow(self) -> None:
+        # Regression test for: heavy boost concentrates weight on one column,
+        # causing max(min_per_col, ...) on the rest to exceed stats_budget.
+        # All three sections must be active so stats_budget < total_budget.
+        df = pd.DataFrame({f"c{i}": range(10) for i in range(20)})
+        allocator = TokenBudgetAllocator()
+        plan = allocator.allocate(
+            df,
+            total_budget=200,
+            column_priority={"c0": 100.0},
+        )
+        # stats ratio is 0.55 of the total when all sections are active
+        stats_budget = int(200 * 0.55)
+        total_col_budget = sum(plan.column_budgets.values())
+        assert total_col_budget <= stats_budget
+        # Boosted column should still receive the most budget
+        assert plan.column_budgets["c0"] == max(plan.column_budgets.values())
+
+    def test_hint_extreme_boost_no_overflow(self) -> None:
+        # Strong hint relevance on one column should not push total over budget.
+        df = pd.DataFrame({
+            "email": [f"user{i}@example.com" for i in range(50)],
+            **{f"c{i}": range(50) for i in range(19)},
+        })
+        allocator = TokenBudgetAllocator()
+        plan = allocator.allocate(
+            df,
+            total_budget=200,
+            hint="email address",
+        )
+        stats_budget = int(200 * 0.55)
+        total_col_budget = sum(plan.column_budgets.values())
+        assert total_col_budget <= stats_budget
+
     def test_integer_column_names(self) -> None:
         df = pd.DataFrame({0: [1, 2], 1: [3, 4], 2: [5, 6]})
         allocator = TokenBudgetAllocator()
